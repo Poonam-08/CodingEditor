@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Python Code Editor with Terminal</title>
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    #editor { height: 300px; width: 100%; border: 1px solid #ccc; }
+    #terminal { height: 200px; width: 100%; margin-top: 20px; border: 1px solid #ccc; padding: 10px; background-color: #222; color: white; font-family: monospace; overflow-y: auto; }
+    #inputFieldsContainer { margin-top: 10px; }
+    button { margin-top: 10px; padding: 10px; font-size: 16px; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <h1>Python Code Editor</h1>
+  
+  <!-- Monaco Editor -->
+  <div id="editor"></div>
+
+  <!-- User Input Fields (will be dynamically created based on code) -->
+  <div id="inputFieldsContainer" class="hidden">
+    <!-- Dynamically generated input fields will go here -->
+  </div>
+  
+  <!-- Run Code Button -->
+  <button id="run">Run Code</button>
+  
+  <!-- Terminal Output -->
+  <div id="terminal">
+    <pre id="output"></pre>
+  </div>
+
+  <!-- Monaco Editor & Pyodide -->
+  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.37.1/min/vs/loader.js"></script>
+  <script>
+    let editor, pyodide;
+
+    // Initialize the terminal (using a <pre> tag for output)
+    function initializeTerminal() {
+      const terminalElement = document.getElementById('output');
+      terminalElement.textContent = "Loading Python runtime...";
+    }
+
+    // Custom print function to capture Python output
+    function customPrint(message) {
+      const terminalElement = document.getElementById('output');
+      terminalElement.textContent += message + "\n";
+    }
+
+    // Load Pyodide (Python runtime in the browser)
+    async function loadPyodideAndEditor() {
+      pyodide = await loadPyodide();
+      const terminalElement = document.getElementById('output');
+      terminalElement.textContent = "Python runtime ready!";
+
+      // Redirect Python's print function to our custom print
+      pyodide.globals.set("print", customPrint);
+
+      // Configure Monaco editor loader
+      require.config({
+        paths: {
+          vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.37.1/min/vs'
+        }
+      });
+
+      require(["vs/editor/editor.main"], () => {
+        editor = monaco.editor.create(document.getElementById("editor"), {
+          value: 'name = input("Enter your name: ")\nprint("Hello, " + name)',
+          language: "python",
+          theme: "vs-dark"
+        });
+        
+        // Watch for changes in the editor
+        editor.onDidChangeModelContent(() => {
+          updateInputFields();
+        });
+
+        // Initialize input fields initially
+        updateInputFields();
+      });
+    }
+
+    // Detect input fields from code and extract the prompt text
+    function detectInputCalls(code) {
+      const inputRegex = /\binput\(["'](.*?)["']\)/g;
+      const matches = [...code.matchAll(inputRegex)];
+      return matches.map(match => match[1]); // return the prompt message
+    }
+
+    // Update the input fields dynamically based on the number of input() calls
+    function updateInputFields() {
+      const code = editor.getValue();
+      const inputPrompts = detectInputCalls(code);
+
+      // Hide input fields if there are no input() calls
+      const inputFieldsContainer = document.getElementById('inputFieldsContainer');
+      if (inputPrompts.length === 0) {
+        inputFieldsContainer.classList.add('hidden');
+        return;
+      }
+
+      // Show input fields container
+      inputFieldsContainer.classList.remove('hidden');
+
+      let inputFieldsHTML = '';
+      inputPrompts.forEach((prompt, index) => {
+        inputFieldsHTML += `
+          <label for="inputField${index + 1}">${prompt}: </label>
+          <input type="text" id="inputField${index + 1}" placeholder="Enter ${prompt}" />
+          <br>`;
+      });
+
+      document.getElementById('inputFieldsContainer').innerHTML = inputFieldsHTML;
+    }
+
+    // Wait for Pyodide and Monaco to load before proceeding
+    async function initialize() {
+      initializeTerminal();
+      await loadPyodideAndEditor();
+    }
+
+    // Run Code button handler
+    document.getElementById("run").addEventListener("click", async () => {
+      const code = editor.getValue();
+      const terminalElement = document.getElementById('output');
+      terminalElement.textContent = '';  // Clear terminal before running new code
+
+      // Validate user input dynamically
+      const inputPrompts = detectInputCalls(code);
+      let userInputs = [];
+      
+      for (let i = 1; i <= inputPrompts.length; i++) {
+        const userInput = document.getElementById(`inputField${i}`).value;
+        if (userInput.trim() === "") {
+          customPrint(`Error: Input cannot be left empty. Please enter the inputs :`);
+	  customPrint(`${inputPrompts[i - 1]}`);
+          return;
+        }
+        userInputs.push(userInput);
+      }
+
+      // Redirect the input to Python's input() function
+      pyodide.globals.set("input", () => userInputs.shift());
+
+      // Use try-catch block for error handling
+      try {
+        // Capture the output of Python code
+        const result = await pyodide.runPythonAsync(code);
+        if (result !== undefined) {
+          customPrint(result?.toString() || "[No output]");
+        }
+      } catch (err) {
+        customPrint(`Error: ${err}`);
+      }
+    });
+
+    // Initialize everything
+    initialize();
+  </script>
+</body>
+</html>
