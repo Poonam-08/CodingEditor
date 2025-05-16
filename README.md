@@ -12,7 +12,7 @@ This project provides a Python code editor running in the browser with an integr
 
 ## Demo
 You can try out the editor and run Python code directly from the browser. Check out the live demo at:  
-[**Live Demo URL**](https://your-hosted-url-here.com)
+[**Live Demo URL**](https://poonam-08.github.io/CodingEditor/)
 
 ## Getting Started
 
@@ -22,13 +22,13 @@ To run this project locally, you need a modern web browser that supports JavaScr
 ### Installation
 
 1. Clone this repository or download the files to your local machine.
-2.*Open the index.html file in your preferred browser.
+2. Open the index.html file in your preferred browser.
 
 open index.html
 
 This will launch the Python editor in your browser.
 
-###Usage
+### Usage
 1. Write Python Code:
 You can write Python code inside the Monaco editor. For example:
 
@@ -44,7 +44,7 @@ After writing your code and providing the necessary inputs, click the Run Code b
 4. See Output:
 The terminal below the code editor will display the output or any error messages. If you leave an input field blank, you will see a validation error with the missing input prompts displayed on two lines for better clarity.
 
-###How It Works
+### How It Works
 1. Monaco Editor: The code editor uses Monaco Editor, which provides a rich, fast, and customizable code editing environment with syntax highlighting for Python.
 
 2. Pyodide: Pyodide is used to run Python code directly in the browser. It is a WebAssembly port of CPython and allows running Python code in the browser without needing a server-side interpreter.
@@ -55,7 +55,7 @@ The terminal below the code editor will display the output or any error messages
 
 5. User Input Validation: If an input field is left empty, the terminal shows an error message indicating which input is missing, with the message split across two lines for better readability.
 
-###Contributing
+### Contributing
 1. Fork the repository.
 
 2. Create a new branch (git checkout -b feature-name).
@@ -66,10 +66,10 @@ The terminal below the code editor will display the output or any error messages
 
 5. Create a new Pull Request.
 
-###License
+### License
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-###Acknowledgements
+### Acknowledgements
 - Monaco Editor: A fast, lightweight code editor developed by Microsoft.
 
 - Pyodide: A Python interpreter compiled to WebAssembly, enabling Python code to run in the browser.
